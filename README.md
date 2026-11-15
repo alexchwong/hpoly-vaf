@@ -11,8 +11,8 @@ Homopolymer indel VAF with flow evaluation by code extracted from the Torrent Va
 | `docs/SPEC.md` | Implementation spec v3 with input and output gates for phases P0 to P7 |
 | `kit/` | **Working.** Builds unmodified `tvc` 5.18.6, `tvcutils`, `tvc-trace` and `hpoly-eval-pruned`. Ten gates pass on synthetic flow data |
 | `kit/check_trimmed_bam.py` | **Working.** Returned `SOFT` on a real example BAM pair |
-| `src/hpoly_vaf/` | **Not implemented.** Phases P2 to P6 |
-| `tests/` | **Not implemented.** Cases are listed in spec section 7 |
+| `src/hpoly_vaf/` | Preflight and explicit Genexus reference preparation implemented; later phases pending |
+| `tests/` | Synthetic preflight and reference preparation tests; P3 section 7 classifier cases pending |
 
 No evaluator binary has been run on real sequencing data.
 
@@ -34,6 +34,14 @@ python3 kit/check_trimmed_bam.py --bam merged.bam --trimmed-bam merged.bam.ptrim
 ```
 
 `build_tvc.sh` clones the full public TVC repository, which is large. Allow 10 GB in the work directory.
+
+## Genexus hg19 references
+
+For the hg19/rCRS mitochondrial reference difference, use the explicit
+`prepare-genexus-reference` command before `preflight`. See
+`/home/alex-wong/vscode_projects/hpoly_vaf/docs/GENEXUS_REFERENCE.md` for inputs,
+checksum validation and provenance limits. This creates a separate reference;
+it never bypasses F1 or edits BAM headers.
 
 ## Licence
 

@@ -1,7 +1,9 @@
 # P2 plan: preflight on the real files
 
-Status: planned only. P1 passed locally on 15 November 2026. No P2 input gate,
-implementation, or real-data validation has been performed.
+Status: completed locally on 15 November 2026 after explicit Genexus hg19/rCRS
+reference preparation. All F1–F9 HARD checks passed; F10/F11 recorded. The prior
+UCSC-reference F1 failure is retained in REPORT.md. Next: docs/P3_PLAN.md.
+The original implementation plan follows for reference.
 
 ## 1. Required operator inputs and safety boundary
 
