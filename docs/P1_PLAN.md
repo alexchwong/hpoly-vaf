@@ -1,6 +1,10 @@
 # P1 execution plan: confirm the engine on synthetic data
 
-Status: planned only; not executed locally.
+Status: executed locally on 15 November 2026; exit status 0 and all ten gates
+passed. See the appended local P1 entry in
+`/home/alex-wong/vscode_projects/hpoly_vaf/REPORT.md`. The execution plan below
+is retained for reference. Next phase plan:
+`/home/alex-wong/vscode_projects/hpoly_vaf/docs/P2_PLAN.md`.
 Prerequisite: P0 passed on 15 November 2026; see the appended local entry in
 `/home/alex-wong/vscode_projects/hpoly_vaf/REPORT.md`.
 

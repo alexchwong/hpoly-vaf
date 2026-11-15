@@ -102,3 +102,88 @@ Logs are local, outside Git, under
 Stopped after successful P0 at the operator's request. P1 has not run locally;
 the synthetic output directory does not exist. The historical P1 PASS entries
 above belong to the kit author, not this machine. See `docs/P1_PLAN.md`.
+
+## Local P1, 15 November 2026
+
+### Input gate (HARD): PASS
+
+Reconfirmed the exact P0 version string, all five executable binaries, and
+`cmp /work/bin/hpoly-eval /work/bin/tvc-trace` (exit 0). All five binary SHA-256
+values match the P0 report. All kit files match the delivered archive. The
+synthetic output path did not exist before this first local run.
+Input-check log: `/home/alex-wong/vscode_projects/hpoly_vaf_workfolder/logs/p1-input-gate.log`;
+recorded exit status: 0.
+
+### Execution
+
+Used the same P0 Docker image without rebuilding or changing the compiler:
+`sha256:e55e194d82e5f7442f0396def429a51c7662209c6c5f8c88ce1c9e1aa8c32b43`.
+
+Exact host command (Bash; logs captured outside the repository):
+
+```bash
+docker run --rm --name hpoly-vaf-p1 \
+  --user "$(id -u):$(id -g)" -e HOME=/tmp \
+  -v /home/alex-wong/vscode_projects/hpoly_vaf:/repo:ro \
+  -v /home/alex-wong/vscode_projects/hpoly_vaf_workfolder:/work \
+  -w /repo \
+  sha256:e55e194d82e5f7442f0396def429a51c7662209c6c5f8c88ce1c9e1aa8c32b43 \
+  /repo/kit/run_synth_gates.sh /work \
+  > /home/alex-wong/vscode_projects/hpoly_vaf_workfolder/logs/p1-gates.log 2>&1
+rc=$?
+printf '%s\n' "$rc" > /home/alex-wong/vscode_projects/hpoly_vaf_workfolder/logs/p1-gates.exit
+```
+
+### Output gate (HARD): PASS
+
+Observed script exit status: **0**. Complete console output:
+
+```text
+PASS G1_single_allele
+PASS G2_three_alleles
+PASS G3_rerun_identical
+PASS G4_default_downsample
+PASS G5_trace_vcf_equals_unmodified
+PASS G6_groups_tsv
+PASS G7_reads_tsv_classes
+PASS G8_pruned_vcf_equals_unmodified
+PASS G9_pruned_trace_equals_trace
+PASS G10_soft_clipped_reads_same_trace
+```
+
+| Gate | Expected | Observed |
+|---|---|---|
+| G1 | `FAO=1200 FDP=6000 FRO=4800` | Exact match; PASS |
+| G2 | `FAO=1200,0,0 FDP=6000 FRO=4800` | Exact match; PASS |
+| G3 | Repeat VCF body identical | Identical; PASS |
+| G4 | Default sampling `FDP=2000` | Exact match; PASS |
+| G5 | Trace VCF body equals unmodified | Identical; PASS |
+| G6 | `chrT 300 CAA CA,C,CAAA 6000 0 4800 1200,0,0` | Exact tab-separated match; PASS |
+| G7 | 4,800 class 0; 1,200 class 1 | Exact match; PASS |
+| G8 | Pruned VCF body equals unmodified | Identical; PASS |
+| G9 | Pruned read and group traces equal traced build | Byte-identical; PASS |
+| G10 | Soft-clipped read trace equals unclipped | Byte-identical; PASS |
+
+Post-run verification independently checked all ten gate identifiers and exit
+status, VCF body equality, the group row, read class counts, pruned traces and
+soft-clipped read trace. `hpoly-eval` remains byte-identical to `tvc-trace`.
+No kit or TVC source files were edited.
+
+Retained local evidence:
+
+- `/home/alex-wong/vscode_projects/hpoly_vaf_workfolder/logs/p1-gates.log`
+- `/home/alex-wong/vscode_projects/hpoly_vaf_workfolder/logs/p1-gates.exit`
+- `/home/alex-wong/vscode_projects/hpoly_vaf_workfolder/synth/` (inputs, indexes,
+  per-run engine logs, VCF outputs and traces; not published)
+
+| Evidence | SHA-256 |
+|---|---|
+| `logs/p1-gates.log` | `efd9576e50700b8fcb7b8d04a95c1a63df5631c935cd496860b5e53a68eaf0f6` |
+| `synth/t3/reads.tsv` | `28b5bcac1aba08be6c2e84fdbfc2a29a68addb39db1a0ab1ac653f94bb91802d` |
+| `synth/t3/groups.tsv` | `15ee5c49992fbbe1201c1c0509a17e53bd94b9a57e1fbac7b4ded37e14b5aa37` |
+
+Stopped after successful P1 at the operator's request. P2 has not started:
+real input paths have not been supplied, the real trimmed-BAM checker has not
+been run locally, and no Python implementation was added. The detailed P2
+plan is in `docs/P2_PLAN.md`. Synthetic pruning equivalence does not authorize
+adoption of the pruned evaluator; that still requires P7 real-data gates.
