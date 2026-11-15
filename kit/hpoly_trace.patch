@@ -1,0 +1,59 @@
+diff --git a/Analysis/VariantCaller/HandleVariant.cpp b/Analysis/VariantCaller/HandleVariant.cpp
+index 8748104..34e2d2c 100644
+--- a/Analysis/VariantCaller/HandleVariant.cpp
++++ b/Analysis/VariantCaller/HandleVariant.cpp
+@@ -200,6 +200,44 @@ void DoStepsForNoData(VariantCandidate& candidate_variant, const string& sample_
+ // return 0: normal termination
+ // return 1: no data (empty read stack)
+ // return 2: no data (no valid functional families on read stack)
++
++#include <cstdlib>
++#include <cstdio>
++#include <pthread.h>
++// Additive trace writer for the hpoly extraction. Writes nothing unless HPOLY_TRACE_DIR is set.
++static pthread_mutex_t hpoly_trace_mutex = PTHREAD_MUTEX_INITIALIZER;
++static void HpolyTraceWrite(EnsembleEval &my_ensemble){
++  const char* dir = getenv("HPOLY_TRACE_DIR");
++  if (dir == NULL) return;
++  string alts = my_ensemble.variant->alt[0];
++  for (unsigned int i = 1; i < my_ensemble.variant->alt.size(); ++i) alts += "," + my_ensemble.variant->alt[i];
++  unsigned int num_alt = my_ensemble.variant->alt.size();
++  vector<long> counts(num_alt + 2, 0); // [0]=outlier, [1]=ref, [2..]=alts
++  pthread_mutex_lock(&hpoly_trace_mutex);
++  string rpath = string(dir) + "/reads.tsv";
++  string gpath = string(dir) + "/groups.tsv";
++  FILE* rf = fopen(rpath.c_str(), "a");
++  FILE* gf = fopen(gpath.c_str(), "a");
++  if (rf == NULL or gf == NULL) { cerr << "HPOLY TRACE ERROR: cannot open trace files in " << dir << endl; exit(1); }
++  const vector<CrossHypotheses>& hyp = my_ensemble.allele_eval.total_theory.my_hypotheses;
++  for (unsigned int i_read = 0; i_read < my_ensemble.read_stack.size(); ++i_read) {
++    int cls = hyp[i_read].success ? hyp[i_read].MostResponsible() - 1 : -1;
++    counts[cls + 1] += my_ensemble.read_stack[i_read]->read_count;
++    fprintf(rf, "%s\t%ld\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t", my_ensemble.variant->sequenceName.c_str(), (long)my_ensemble.variant->position,
++        my_ensemble.variant->ref.c_str(), alts.c_str(), my_ensemble.read_stack[i_read]->alignment.Name.c_str(),
++        my_ensemble.read_stack[i_read]->is_reverse_strand ? 1 : 0, hyp[i_read].success ? 1 : 0, cls, (int)my_ensemble.read_stack[i_read]->read_count);
++    for (unsigned int i_hyp = 0; i_hyp < hyp[i_read].responsibility.size(); ++i_hyp)
++      fprintf(rf, "%s%.6g", i_hyp ? "," : "", (double)hyp[i_read].responsibility[i_hyp]);
++    fprintf(rf, "\n");
++  }
++  fprintf(gf, "%s\t%ld\t%s\t%s\t%u\t%ld\t%ld\t", my_ensemble.variant->sequenceName.c_str(), (long)my_ensemble.variant->position,
++      my_ensemble.variant->ref.c_str(), alts.c_str(), (unsigned int)my_ensemble.read_stack.size(), counts[0], counts[1]);
++  for (unsigned int i_alt = 0; i_alt < num_alt; ++i_alt) fprintf(gf, "%s%ld", i_alt ? "," : "", counts[i_alt + 2]);
++  fprintf(gf, "\n");
++  fclose(rf); fclose(gf);
++  pthread_mutex_unlock(&hpoly_trace_mutex);
++}
++
+ int EnsembleProcessOneVariant(PersistingThreadObjects &thread_objects, VariantCallerContext& vc,
+     VariantCandidate &candidate_variant, const PositionInProgress& bam_position,
+ 	vector< vector<MolecularFamily> > &molecular_families, int sample_index)
+@@ -294,6 +332,9 @@ int EnsembleProcessOneVariant(PersistingThreadObjects &thread_objects, VariantCa
+   }
+ 
+ 
++
++  // ---- hpoly trace (additive; active only when HPOLY_TRACE_DIR is set) ----
++  HpolyTraceWrite(my_ensemble);
+   // test diagnostic output for this ensemble
+   if (vc.parameters->program_flow.rich_json_diagnostic & (!(my_ensemble.variant->isFiltered) | my_ensemble.variant->isHotSpot)){ // look at everything that came through
+ 	  cout << "+ Dumping rich json diagnostic for (" << PrintVariant(candidate_variant.variant) << ")" << endl;

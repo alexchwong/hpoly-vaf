@@ -1,0 +1,75 @@
+diff --git a/Analysis/VariantCaller/BAMWalkerEngine.cpp b/Analysis/VariantCaller/BAMWalkerEngine.cpp
+index 9edbb1f..83364c6 100644
+--- a/Analysis/VariantCaller/BAMWalkerEngine.cpp
++++ b/Analysis/VariantCaller/BAMWalkerEngine.cpp
+@@ -10,7 +10,6 @@
+ #include <limits.h>
+ #include <set>
+ #include "ReferenceReader.h"
+-#include "IndelAssembly/IndelAssembly.h"
+ #include "InputStructures.h"
+ #include "MolecularTag.h"
+ #include "IonVersion.h"
+@@ -599,9 +598,6 @@ bool BAMWalkerEngine::GetNextAlignmentCore(Alignment* new_read, VariantCallerCon
+ 	if (!bam_reader_.GetNextAlignmentCore(temp_reads[i])) break;
+ 	temp_reads[i].BuildCharData();
+ 	// Do indel assembly only if no molecular tag detected.
+-	if(vc.parameters->program_flow.do_indel_assembly){
+-        vc.indel_assembly->processRead(temp_reads[i], indel_target, vc.parameters->useDuplicateReads);
+-	}
+ 	if (temp_reads[i].RefID < 0) break;
+ 	if (temp_reads[i].Position != temp_reads[0].Position or temp_reads[i].RefID != temp_reads[0].RefID) {
+ 	    next_temp_read = &temp_reads[i];
+diff --git a/Analysis/VariantCaller/VariantCaller.cpp b/Analysis/VariantCaller/VariantCaller.cpp
+index b356eb3..f75ae3a 100644
+--- a/Analysis/VariantCaller/VariantCaller.cpp
++++ b/Analysis/VariantCaller/VariantCaller.cpp
+@@ -31,7 +31,6 @@
+ #include <boost/math/distributions/poisson.hpp>
+ #include "tvcutils/viterbi.h"
+ 
+-#include "IndelAssembly/IndelAssembly.h"
+ #include "MolecularTag.h"
+ #include "Consensus.h"
+ 
+@@ -109,24 +108,6 @@ static int main_tvc(int argc, char* argv[])
+   }
+   string parameters_file = parameters.opts.GetFirstString('-', "parameters-file", "");
+ 
+-  IndelAssemblyArgs parsed_opts;
+-  parsed_opts.setReference(parameters.fasta);
+-  parsed_opts.setBams(parameters.bams);
+-  parsed_opts.setTargetFile(parameters.targets);
+-  parsed_opts.setOutputVcf(parameters.outputDir + "/" + parameters.indel_assembly_vcf);
+-  parsed_opts.setParametersFile(parameters_file);
+-  // Weird behavior of assembly where an empty sample name enables multi-sample analysis
+-  parsed_opts.setSampleName(parameters.multisample ? "" : sample_manager.primary_sample_name_);
+-  // Print the indel_assembly parameters if do_indel_assembly = true
+-  if(parameters.program_flow.do_indel_assembly){
+-	  cout << "TVC: Parsing Indel Assembly parameters." << endl;
+-	  parsed_opts.processParameters(parameters.opts);
+-  }
+-  else{
+-	  cout<<"TVC: Indel Assembly off."<< endl;
+-  }
+-
+-  IndelAssembly indel_assembly(&parsed_opts, &ref_reader, &sample_manager, &targets_manager);
+   
+   // set up producer of variants
+   AlleleParser candidate_generator(parameters, ref_reader, sample_manager, vcf_writer, hotspot_reader);
+@@ -144,7 +125,6 @@ static int main_tvc(int argc, char* argv[])
+   vc.bam_writer = &bam_writer;
+   vc.metrics_manager = &metrics_manager;
+   vc.sample_manager  = &sample_manager;
+-  vc.indel_assembly = &indel_assembly;
+   vc.mol_tag_manager = &mol_tag_manager;
+ 
+   pthread_mutex_init(&vc.candidate_generation_mutex, NULL);
+@@ -198,7 +178,6 @@ static int main_tvc(int argc, char* argv[])
+ 
+   // --- Indel Assembly
+   
+-  indel_assembly.onTraversalDone(vc.parameters->program_flow.do_indel_assembly);
+   cout << "[tvc] Finished indel assembly. Processing time: " << (time(NULL)-indel_start_time) << " seconds." << endl;
+ 
+   // --- VCF post processing & merging steps

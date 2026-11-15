@@ -1,0 +1,57 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Local configuration, credentials, and editor state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.vscode/
+.idea/
+.DS_Store
+*~
+
+# Original delivery files; canonical copies live in docs/ and kit/
+/hpoly-vaf.zip
+/hpoly_vaf_extraction_spec_v3.md
+/check_trimmed_bam.py
+
+# Build products and local run outputs (use an external work directory)
+/build*/
+/bin/
+/deps/
+/TS/
+work/
+results/
+*.o
+*.a
+*.so
+*.log
+
+# Sequencing data and indexes; never publish input datasets
+/data/
+*.bam
+*.bai
+*.cram
+*.crai
+*.sam
+*.csi
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+*.fa
+*.fa.gz
+*.fasta
+*.fasta.gz
+*.fai
+*.gzi
+*.vcf.gz
+*.tbi

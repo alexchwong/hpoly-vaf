@@ -1,0 +1,29 @@
+diff --git a/Analysis/VariantCaller/HandleVariant.cpp b/Analysis/VariantCaller/HandleVariant.cpp
+index 34e2d2c..4ff0e61 100644
+--- a/Analysis/VariantCaller/HandleVariant.cpp
++++ b/Analysis/VariantCaller/HandleVariant.cpp
+@@ -11,7 +11,6 @@
+ #include "MiscUtil.h"
+ #include "ExtendedReadInfo.h"
+ #include "ClassifyVariant.h"
+-#include "DiagnosticJson.h"
+ #include "ExtendParameters.h"
+ 
+ void SummarizeInfoFieldsFromEnsemble(EnsembleEval &my_ensemble, vcf::Variant &candidate_variant, const string &sample_name) {
+@@ -335,16 +334,6 @@ int EnsembleProcessOneVariant(PersistingThreadObjects &thread_objects, VariantCa
+ 
+   // ---- hpoly trace (additive; active only when HPOLY_TRACE_DIR is set) ----
+   HpolyTraceWrite(my_ensemble);
+-  // test diagnostic output for this ensemble
+-  if (vc.parameters->program_flow.rich_json_diagnostic & (!(my_ensemble.variant->isFiltered) | my_ensemble.variant->isHotSpot)){ // look at everything that came through
+-	  cout << "+ Dumping rich json diagnostic for (" << PrintVariant(candidate_variant.variant) << ")" << endl;
+-	  JustOneDiagnosis(my_ensemble, *vc.global_context, vc.parameters->json_plot_dir, true);
+-  }
+-  if (vc.parameters->program_flow.minimal_diagnostic & (!(my_ensemble.variant->isFiltered) | my_ensemble.variant->isHotSpot)){ // look at everything that came through
+-	  cout << "+ Dumping minimal json diagnostic for (" << PrintVariant(candidate_variant.variant) << ")" << endl;
+-	  JustOneDiagnosis(my_ensemble, *vc.global_context, vc.parameters->json_plot_dir, false);
+-  }
+-
+   if(vc.parameters->program_flow.DEBUG > 0){
+       cout << endl << "[tvc] Complete EnsembleProcessOneVariant for (" << PrintVariant(candidate_variant.variant) << "). Processing time = " << (double) (clock() - t0) / 1E6 << " sec." << endl << endl;
+   }

@@ -1,0 +1,24 @@
+diff --git a/Analysis/VariantCaller/VariantCaller.cpp b/Analysis/VariantCaller/VariantCaller.cpp
+index 736bd20..b356eb3 100644
+--- a/Analysis/VariantCaller/VariantCaller.cpp
++++ b/Analysis/VariantCaller/VariantCaller.cpp
+@@ -30,7 +30,6 @@
+ 
+ #include <boost/math/distributions/poisson.hpp>
+ #include "tvcutils/viterbi.h"
+-#include "tvcutils/unify_vcf.h"
+ 
+ #include "IndelAssembly/IndelAssembly.h"
+ #include "MolecularTag.h"
+@@ -238,11 +237,6 @@ static int main_tvc(int argc, char* argv[])
+ 
+ int main(int argc,  char* argv[])
+ {
+-   if (argc > 1){
+-       if (string(argv[1]) == "consensus"){
+-           return ConsensusMain(argc - 1, argv + 1);
+-       }
+-   }
+    return main_tvc(argc, argv);
+ }
+ 
